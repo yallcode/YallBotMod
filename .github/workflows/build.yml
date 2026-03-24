@@ -27,10 +27,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: mod
 
       - name: Build the mod
         uses: geode-sdk/build-geode-mod@main
         with:
+          path: mod
           combine: true
           target: ${{ matrix.config.target }}
 
