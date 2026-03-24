@@ -1,4 +1,4 @@
-name: Build YallBot.
+name: Build YallBotMod
 
 on:
   push:
@@ -12,18 +12,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - name: Windows
-            os: windows-latest
-          - name: Android32
-            os: ubuntu-latest
-            target: Android32
-          - name: Android64
-            os: ubuntu-latest
-            target: Android64
+        target: [Android32, Android64]
 
-    name: ${{ matrix.config.name }}
-    runs-on: ${{ matrix.config.os }}
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +27,7 @@ jobs:
         with:
           path: mod
           combine: true
-          target: ${{ matrix.config.target }}
+          target: ${{ matrix.target }}
 
   package:
     name: Package builds
