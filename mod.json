@@ -1,29 +1,23 @@
 {
-  "geode": "4.10.0"
-  "gd": {
-    "win": "*",
-    "android": "*"
-  },
-  "id": "yallcode.yallbot",
-  "name": "YallBot.",
-  "version": "v1.0.0",
-  "developer": "yallcode",
-  "description": "A macro recorder and bot for Geometry Dash. Record your runs and play them back perfectly.",
-  "links": {
-    "source": "https://github.com/yallcode/YallBotMod"
-},
-  "settings": {
-    "show-ui-button": {
-      "name": "Show Macro Button",
-      "description": "Show the YallBot button in the pause menu and editor",
-      "type": "bool",
-      "default": true
+    "geode": "4.10.0",
+    "gd": {
+        "win": "*",
+        "android": "*"
     },
-    "fps-fix": {
-      "name": "FPS-Independent Playback",
-      "description": "Try to compensate for FPS differences during playback",
-      "type": "bool",
-      "default": true
+    "id": "yallcode.yallbot",
+    "name": "YallBotMod",
+    "version": "v1.0.0",
+    "developer": "yallcode",
+    "description": "A macro recorder and bot for Geometry Dash.",
+    "links": {
+        "source": "https://github.com/yallcode/YallBotMod"
+    },
+    "settings": {
+        "show-ui-button": {
+            "name": "Show Macro Button",
+            "description": "Show the YallBot button in the pause menu",
+            "type": "bool",
+            "default": true
+        }
     }
-  }
 }
