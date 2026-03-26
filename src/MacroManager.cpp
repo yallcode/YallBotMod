@@ -16,7 +16,7 @@ void MacroManager::startRecording() {
 
 void MacroManager::stopRecording() {
     state = BotState::Idle;
-    log::info("[YallBot] Recording stopped. {} inputs recorded.", inputs.size());
+    log::info("[YallBot] Stopped. {} inputs recorded.", inputs.size());
 }
 
 void MacroManager::startPlayback() {
@@ -27,7 +27,7 @@ void MacroManager::startPlayback() {
     currentFrame = 0;
     playbackIndex = 0;
     state = BotState::Playing;
-    log::info("[YallBot] Playback started. {} inputs to replay.", inputs.size());
+    log::info("[YallBot] Playback started.");
 }
 
 void MacroManager::stopPlayback() {
@@ -40,25 +40,20 @@ void MacroManager::clearMacro() {
     currentFrame = 0;
     playbackIndex = 0;
     state = BotState::Idle;
-    log::info("[YallBot] Macro cleared.");
 }
 
 void MacroManager::onFrameAdvance(GJBaseGameLayer* layer) {
     if (state == BotState::Playing) {
-        // Replay all inputs for the current frame
         while (playbackIndex < (int)inputs.size() &&
                inputs[playbackIndex].frame == currentFrame) {
             auto& inp = inputs[playbackIndex];
-            if (inp.down) {
-                layer->pushButton(inp.button, !inp.player2);
-            } else {
-                layer->releaseButton(inp.button, !inp.player2);
-            }
+            // Use handleButton instead of pushButton/releaseButton
+            layer->handleButton(inp.down, inp.button, !inp.player2);
             playbackIndex++;
         }
     }
 
-    if (state == BotState::Recording || state == BotState::Playing) {
+    if (state != BotState::Idle) {
         currentFrame++;
     }
 }
@@ -80,19 +75,14 @@ bool MacroManager::saveMacro(const std::string& filename) {
     std::ofstream file(path, std::ios::binary);
     if (!file.is_open()) return false;
 
-    // Write header
     uint32_t count = (uint32_t)inputs.size();
     file.write(reinterpret_cast<char*>(&count), sizeof(count));
-
-    // Write each input
     for (auto& inp : inputs) {
         file.write(reinterpret_cast<char*>(&inp.frame), sizeof(inp.frame));
         file.write(reinterpret_cast<char*>(&inp.button), sizeof(inp.button));
         file.write(reinterpret_cast<char*>(&inp.player2), sizeof(inp.player2));
         file.write(reinterpret_cast<char*>(&inp.down), sizeof(inp.down));
     }
-
-    log::info("[YallBot] Macro saved to {}", path);
     return true;
 }
 
@@ -104,7 +94,6 @@ bool MacroManager::loadMacro(const std::string& filename) {
     inputs.clear();
     uint32_t count;
     file.read(reinterpret_cast<char*>(&count), sizeof(count));
-
     for (uint32_t i = 0; i < count; i++) {
         MacroInput inp;
         file.read(reinterpret_cast<char*>(&inp.frame), sizeof(inp.frame));
@@ -113,7 +102,5 @@ bool MacroManager::loadMacro(const std::string& filename) {
         file.read(reinterpret_cast<char*>(&inp.down), sizeof(inp.down));
         inputs.push_back(inp);
     }
-
-    log::info("[YallBot] Macro loaded from {} ({} inputs)", path, inputs.size());
     return true;
 }
