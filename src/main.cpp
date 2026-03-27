@@ -48,13 +48,12 @@ class $modify(YallBotPauseLayer, PauseLayer) {
         CCLabelBMFont* statusLabel = nullptr;
     };
 
-    bool init() {
-        if (!PauseLayer::init()) return false;
+    bool init(bool unfocused) {
+        if (!PauseLayer::init(unfocused)) return false;
 
         if (!Mod::get()->getSettingValue<bool>("show-ui-button")) return true;
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
-        auto& bot = MacroManager::get();
 
         // ── Background panel ─────────────────────────────────────────────────
         auto bg = CCScale9Sprite::create("square02_small.png");
@@ -96,7 +95,6 @@ class $modify(YallBotPauseLayer, PauseLayer) {
             actionLbl, this,
             menu_selector(YallBotPauseLayer::onToggle)
         );
-        actionBtn->setTag(1);
 
         // Clear button
         auto clearLbl = CCLabelBMFont::create("Clear", "bigFont.fnt");
@@ -155,13 +153,8 @@ class $modify(YallBotPauseLayer, PauseLayer) {
                 bot.stopPlayback();
                 break;
         }
-        // Update labels after toggle
         if (m_fields->statusLabel) {
             m_fields->statusLabel->setString(this->getStatusText().c_str());
-        }
-        // Update action button label
-        if (auto menu = this->getChildByTag(11)) {
-            // refresh
         }
     }
 
