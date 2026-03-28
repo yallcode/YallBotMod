@@ -2,14 +2,13 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/PauseLayer.hpp>
-#include <Geode/ui/Popup.hpp>
 #include "MacroManager.hpp"
 
 using namespace geode::prelude;
 
 // ── YallBot Popup ─────────────────────────────────────────────────────────────
 
-class YallBotPopup : public geode::Popup<> {
+class YallBotPopup : public FLAlertLayer {
 protected:
     CCLabelBMFont* m_replayLabel = nullptr;
     CCLabelBMFont* m_disabledLbl = nullptr;
@@ -18,37 +17,36 @@ protected:
     CCMenuItemToggler* m_ignoreToggle = nullptr;
     int m_replayIndex = 0;
 
-    bool setup() {
-        this->setTitle("YallBot.");
+    bool init() {
+        if (!FLAlertLayer::init(nullptr, "YallBot.", "", "Close", nullptr, 310.f)) 
+            return false;
 
-        auto sz = m_mainLayer->getContentSize();
+        auto bg = m_mainLayer;
+        auto sz = bg->getContentSize();
         float cx = sz.width / 2;
         float top = sz.height - 30.f;
 
         // ── Mode buttons ──────────────────────────────────────────────────
         auto modeMenu = CCMenu::create();
         modeMenu->setPosition({ cx, top - 20.f });
-        m_mainLayer->addChild(modeMenu);
+        bg->addChild(modeMenu, 10);
 
         m_disabledLbl = CCLabelBMFont::create("Disabled", "bigFont.fnt");
         m_disabledLbl->setScale(0.4f);
         auto disabledBtn = CCMenuItemLabel::create(
-            m_disabledLbl, static_cast<CCObject*>(this),
-            menu_selector(YallBotPopup::onDisabled)
+            m_disabledLbl, this, menu_selector(YallBotPopup::onDisabled)
         );
 
         m_recordLbl = CCLabelBMFont::create("Record", "bigFont.fnt");
         m_recordLbl->setScale(0.4f);
         auto recordBtn = CCMenuItemLabel::create(
-            m_recordLbl, static_cast<CCObject*>(this),
-            menu_selector(YallBotPopup::onRecord)
+            m_recordLbl, this, menu_selector(YallBotPopup::onRecord)
         );
 
         m_playbackLbl = CCLabelBMFont::create("Playback", "bigFont.fnt");
         m_playbackLbl->setScale(0.4f);
         auto playbackBtn = CCMenuItemLabel::create(
-            m_playbackLbl, static_cast<CCObject*>(this),
-            menu_selector(YallBotPopup::onPlayback)
+            m_playbackLbl, this, menu_selector(YallBotPopup::onPlayback)
         );
 
         modeMenu->addChild(disabledBtn);
@@ -57,43 +55,44 @@ protected:
         modeMenu->alignItemsHorizontallyWithPadding(14.f);
         this->updateModeColors();
 
-        // ── Replay label ──────────────────────────────────────────────────
-        auto navLabel = CCLabelBMFont::create("Replays", "bigFont.fnt");
-        navLabel->setScale(0.4f);
-        navLabel->setPosition({ cx - 60.f, top - 55.f });
-        m_mainLayer->addChild(navLabel);
+        // ── Replays label ─────────────────────────────────────────────────
+        auto replaysTitleLbl = CCLabelBMFont::create("Replays", "bigFont.fnt");
+        replaysTitleLbl->setScale(0.4f);
+        replaysTitleLbl->setAnchorPoint({ 0.f, 0.5f });
+        replaysTitleLbl->setPosition({ 18.f, top - 55.f });
+        bg->addChild(replaysTitleLbl, 10);
 
-        // Replay navigator bg
+        // ── Replay navigator ──────────────────────────────────────────────
         auto navBg = CCScale9Sprite::create("square02_small.png");
-        navBg->setContentSize({ 150.f, 26.f });
+        navBg->setContentSize({ 145.f, 26.f });
         navBg->setOpacity(80);
-        navBg->setPosition({ cx + 45.f, top - 55.f });
-        m_mainLayer->addChild(navBg);
+        navBg->setPosition({ cx + 50.f, top - 55.f });
+        bg->addChild(navBg, 10);
 
         auto navMenu = CCMenu::create();
-        navMenu->setPosition({ cx + 45.f, top - 55.f });
-        m_mainLayer->addChild(navMenu);
+        navMenu->setPosition({ cx + 50.f, top - 55.f });
+        bg->addChild(navMenu, 11);
 
         auto leftSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
         leftSpr->setScale(0.4f);
         auto leftBtn = CCMenuItemSpriteExtra::create(
-            leftSpr, static_cast<CCObject*>(this),
-            menu_selector(YallBotPopup::onPrev)
+            leftSpr, this, menu_selector(YallBotPopup::onPrev)
         );
 
         m_replayLabel = CCLabelBMFont::create(
             this->currentReplayName().c_str(), "chatFont.fnt"
         );
         m_replayLabel->setScale(0.5f);
-        m_replayLabel->limitLabelWidth(90.f, 0.5f, 0.1f);
-        auto replayLabelItem = CCMenuItemLabel::create(m_replayLabel, nullptr, nullptr);
+        m_replayLabel->limitLabelWidth(85.f, 0.5f, 0.1f);
+        auto replayLabelItem = CCMenuItemLabel::create(
+            m_replayLabel, this, nullptr
+        );
 
         auto rightSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
         rightSpr->setFlipX(true);
         rightSpr->setScale(0.4f);
         auto rightBtn = CCMenuItemSpriteExtra::create(
-            rightSpr, static_cast<CCObject*>(this),
-            menu_selector(YallBotPopup::onNext)
+            rightSpr, this, menu_selector(YallBotPopup::onNext)
         );
 
         navMenu->addChild(leftBtn);
@@ -101,45 +100,41 @@ protected:
         navMenu->addChild(rightBtn);
         navMenu->alignItemsHorizontallyWithPadding(4.f);
 
-        // ── Ignore Inputs toggle ──────────────────────────────────────────
+        // ── Ignore Inputs ─────────────────────────────────────────────────
         auto ignoreMenu = CCMenu::create();
-        ignoreMenu->setPosition({ cx, top - 88.f });
-        m_mainLayer->addChild(ignoreMenu);
+        ignoreMenu->setPosition({ cx - 10.f, top - 88.f });
+        bg->addChild(ignoreMenu, 10);
 
         m_ignoreToggle = CCMenuItemToggler::createWithStandardSprites(
-            static_cast<CCObject*>(this),
-            menu_selector(YallBotPopup::onIgnoreInputs),
-            0.65f
+            this, menu_selector(YallBotPopup::onIgnoreInputs), 0.65f
         );
         m_ignoreToggle->toggle(MacroManager::get().ignoreInputs);
 
         auto ignoreLbl = CCLabelBMFont::create("Ignore Inputs", "bigFont.fnt");
         ignoreLbl->setScale(0.38f);
         auto ignoreLblItem = CCMenuItemLabel::create(
-            ignoreLbl, static_cast<CCObject*>(this),
-            menu_selector(YallBotPopup::onIgnoreInputsLabel)
+            ignoreLbl, this, menu_selector(YallBotPopup::onIgnoreInputsLabel)
         );
 
         ignoreMenu->addChild(m_ignoreToggle);
         ignoreMenu->addChild(ignoreLblItem);
         ignoreMenu->alignItemsHorizontallyWithPadding(4.f);
 
-        // ── Info button for Ignore Inputs ─────────────────────────────────
+        // Info button
         auto infoSpr = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
         infoSpr->setScale(0.5f);
         auto infoBtn = CCMenuItemSpriteExtra::create(
-            infoSpr, static_cast<CCObject*>(this),
-            menu_selector(YallBotPopup::onIgnoreInfo)
+            infoSpr, this, menu_selector(YallBotPopup::onIgnoreInfo)
         );
         auto infoMenu = CCMenu::create();
         infoMenu->addChild(infoBtn);
         infoMenu->setPosition({ sz.width - 18.f, top - 88.f });
-        m_mainLayer->addChild(infoMenu);
+        bg->addChild(infoMenu, 10);
 
         // ── Action buttons ────────────────────────────────────────────────
         auto btnMenu = CCMenu::create();
         btnMenu->setPosition({ cx, top - 130.f });
-        m_mainLayer->addChild(btnMenu);
+        bg->addChild(btnMenu, 10);
 
         btnMenu->addChild(this->makeBtn("New",    menu_selector(YallBotPopup::onNew)));
         btnMenu->addChild(this->makeBtn("Save",   menu_selector(YallBotPopup::onSave)));
@@ -157,9 +152,7 @@ protected:
         lbl->setScale(0.36f);
         lbl->setPosition(bg->getContentSize() / 2);
         bg->addChild(lbl);
-        return CCMenuItemSpriteExtra::create(
-            bg, static_cast<CCObject*>(this), sel
-        );
+        return CCMenuItemSpriteExtra::create(bg, this, sel);
     }
 
     std::string currentReplayName() {
@@ -268,7 +261,7 @@ protected:
 public:
     static YallBotPopup* create() {
         auto ret = new YallBotPopup();
-        if (ret->init(310.f, 230.f)) {
+        if (ret->init()) {
             ret->autorelease();
             return ret;
         }
@@ -340,8 +333,7 @@ class $modify(YallBotPauseLayer, PauseLayer) {
         bg->addChild(lbl);
 
         auto btn = CCMenuItemSpriteExtra::create(
-            bg, static_cast<CCObject*>(this),
-            menu_selector(YallBotPauseLayer::onOpenYallBot)
+            bg, this, menu_selector(YallBotPauseLayer::onOpenYallBot)
         );
         menu->addChild(btn);
     }
